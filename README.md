@@ -59,7 +59,7 @@ func validateUserNameLength(name string) error {
 	return nil
 }
 ```
-Not only do we return an error but we also log the error using *slog*.  
+Not only do we return an error, but we also log the error using *slog*.  
 Lets look at the calling function:
 
 ```go
@@ -67,16 +67,17 @@ func addUserToRole(userName, roleName string) error {
 	if err := validateUserNameLength(userName); err != nil {
 		slog.Error("validation of username failed", "username", name)
 		return fmt.Errorf("validation of username failed: %w", err)
+	}
 	// ...
 }
 ```
-Again we return the error (with the underlying error), and we also
+Again, we return the error (with the underlying error), and we also
 log it - because we need the context in our messages.
 
 In this case we end up with at least two error messages:
 1. `slog.Error("username is too long", ...)`
 2. `slog.Error("validation of username failed", ...)`
-3. when we handle the `addUserToRole` result: `validation of username failed: username is too long`
+3. when we handle `addUserToRole`: `validation of username failed: username is too long`
 
 The last error that will be logged or printed won't contain any useful information
 on why this problem actually occurred.
@@ -87,8 +88,8 @@ However, this could lead to some funny unreadable errors like:
 validation of username failed [username=MisterDolittle]: username is too long [username=MisterDolittle] [max_length=10]
 ```
 
-This package attempts to solve this problem by providing methods to add tags/fields/kv-pairs to errors,
-so they can be later retrieved.
+This package attempts to solve this problem by providing methods to add tags/fields/kv-pairs to errors that can later be
+retrieved.
 
 
 ## Builder Usage
