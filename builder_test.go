@@ -1,10 +1,9 @@
 package serrors_test
 
 import (
+	"reflect"
 	"runtime"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/Eun/serrors"
 )
@@ -17,7 +16,9 @@ func testBuilderErrorFunc() error {
 
 func TestBuilder(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+	if expect, actual := true, ok; expect != actual {
+		t.Fatalf(`expected %v, but was %v`, expect, actual)
+	}
 
 	t.Run("Errorf", func(t *testing.T) {
 		errorBuilder := serrors.NewBuilder().
@@ -26,8 +27,12 @@ func TestBuilder(t *testing.T) {
 		err := errorBuilder.Errorf("some error"). // [TestBuilderErrorf00]
 								With("key2", "value2").
 								With("key3", "value3")
-		require.NotNil(t, err)
-		require.Equal(t, "some error", err.Error())
+		if err == nil {
+			t.Fatal(`expected not nil`)
+		}
+		if expect, actual := "some error", err.Error(); expect != actual {
+			t.Fatalf(`expected %q, but was %q`, expect, actual)
+		}
 
 		expectedFields := map[string]any{
 			"key1": "value1",
@@ -43,7 +48,9 @@ func TestBuilder(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		if expect, actual := expectedFields, serrors.GetFields(err); !reflect.DeepEqual(expect, actual) {
+			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+		}
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 
@@ -57,8 +64,12 @@ func TestBuilder(t *testing.T) {
 								With("deep.key2", "value2").
 								With("key2", "value2").
 								With("key3", "value3")
-		require.NotNil(t, err)
-		require.Equal(t, "some error: deep error", err.Error())
+		if err == nil {
+			t.Fatal(`expected not nil`)
+		}
+		if expect, actual := "some error: deep error", err.Error(); expect != actual {
+			t.Fatalf(`expected %q, but was %q`, expect, actual)
+		}
 
 		expectedFields := map[string]any{
 			"deep.key1": "value1",
@@ -92,7 +103,9 @@ func TestBuilder(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		if expect, actual := expectedFields, serrors.GetFields(err); !reflect.DeepEqual(expect, actual) {
+			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+		}
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 }

@@ -4,11 +4,10 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/Eun/serrors"
 )
@@ -17,15 +16,23 @@ func TestGetStack(t *testing.T) {
 	// just generic testing
 	// the real test are happening in TestError & TestBuilder.
 	t.Run("get stack from nil value", func(t *testing.T) {
-		require.Nil(t, serrors.GetStack(nil))
+		if serrors.GetStack(nil) != nil {
+			t.Fatal("expected nil")
+		}
 	})
 	t.Run("get original error from stack", func(t *testing.T) {
 		err := serrors.New("some error")
 
 		stack := serrors.GetStack(err)
-		require.Len(t, stack, 1)
-		require.Equal(t, err, stack[0].Error())
-		require.Equal(t, err.Error(), stack[0].ErrorMessage)
+		if expect, actual := 1, len(stack); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
+		if expect, actual := err, stack[0].Error(); !reflect.DeepEqual(expect, actual) {
+			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+		}
+		if expect, actual := err.Error(), stack[0].ErrorMessage; expect != actual {
+			t.Fatalf(`expected %q, but was %q`, expect, actual)
+		}
 	})
 }
 
@@ -36,7 +43,9 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Parse the Go file
 	file, err := parser.ParseFile(fileSet, fileName, nil, parser.AllErrors|parser.ParseComments)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(`expected no error`)
+	}
 	packageName := "github.com/Eun/" + file.Name.Name
 
 	var inspectNode func(n ast.Node) bool
@@ -56,7 +65,9 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 				// Get the function name and line number
 				pos := fileSet.Position(v.Slash)
 				funcName := findEnclosingFunc(fileSet, file, pos.Offset)
-				require.Nil(t, result, "found a marker %q already", marker)
+				if result != nil {
+					t.Fatalf(`found a marker %q already`, marker)
+				}
 				result = &serrors.StackFrame{
 					File: fileName,
 					Func: packageName + "." + funcName,
@@ -70,7 +81,9 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Traverse the AST
 	ast.Inspect(file, inspectNode)
-	require.NotNil(t, result, "no marker found %s", marker)
+	if result == nil {
+		t.Fatalf(`no marker found %q`, marker)
+	}
 	return *result
 }
 

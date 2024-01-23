@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"runtime"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/Eun/serrors"
 )
@@ -22,15 +21,20 @@ func testErrorFunc() error {
 
 func TestError(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+	if expect, actual := true, ok; expect != actual {
+		t.Fatalf(`expected %v, but was %v`, expect, actual)
+	}
 
 	t.Run("Errorf", func(t *testing.T) {
 		err := serrors.Errorf("some error"). // [TestErrorErrorf00]
 							With("key1", "value1").
 							With("key2", "value2")
-
-		require.NotNil(t, err)
-		require.Equal(t, "some error", err.Error())
+		if err == nil {
+			t.Fatal(`expected not nil`)
+		}
+		if expect, actual := "some error", err.Error(); expect != actual {
+			t.Fatalf(`expected %q, but was %q`, expect, actual)
+		}
 
 		expectedFields := map[string]any{
 			"key1": "value1",
@@ -45,7 +49,9 @@ func TestError(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		if expect, actual := expectedFields, serrors.GetFields(err); !reflect.DeepEqual(expect, actual) {
+			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+		}
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 
@@ -55,8 +61,12 @@ func TestError(t *testing.T) {
 							With("deep.key2", "value2").
 							With("key1", "value1").
 							With("key2", "value2")
-		require.NotNil(t, err)
-		require.Equal(t, "some error: deep error", err.Error())
+		if err == nil {
+			t.Fatal(`expected not nil`)
+		}
+		if expect, actual := "some error: deep error", err.Error(); expect != actual {
+			t.Fatalf(`expected %q, but was %q`, expect, actual)
+		}
 
 		expectedFields := map[string]any{
 			"deep.key1": "value1",
@@ -88,7 +98,9 @@ func TestError(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		if expect, actual := expectedFields, serrors.GetFields(err); !reflect.DeepEqual(expect, actual) {
+			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+		}
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 }
@@ -129,7 +141,9 @@ func TestGetFields(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expectedFields, serrors.GetFields(tc.error))
+			if expect, actual := tc.expectedFields, serrors.GetFields(tc.error); !reflect.DeepEqual(expect, actual) {
+				t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+			}
 		})
 	}
 }
@@ -170,7 +184,9 @@ func TestGetFieldsAsArguments(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expectedArguments, serrors.GetFieldsAsCombinedSlice(tc.error))
+			if expect, actual := tc.expectedArguments, serrors.GetFieldsAsCombinedSlice(tc.error); !reflect.DeepEqual(expect, actual) {
+				t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+			}
 		})
 	}
 }
@@ -179,24 +195,36 @@ func TestUnwrap(t *testing.T) {
 	t.Run("wrapped error", func(t *testing.T) {
 		err1 := errors.New("error1")
 		err := serrors.Wrap(err1, "error2")
-		require.Equal(t, err1, errors.Unwrap(err))
+		if expect, actual := err1, errors.Unwrap(err); !reflect.DeepEqual(expect, actual) {
+			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+		}
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error2")
-		require.Nil(t, errors.Unwrap(err))
+		if errors.Unwrap(err) != nil {
+			t.Fatal("expected not nil")
+		}
 	})
 }
 
 func TestIs(t *testing.T) {
 	t.Run("wrapped error", func(t *testing.T) {
 		err := serrors.Wrap(net.ErrClosed, "error")
-		require.True(t, errors.Is(err, net.ErrClosed))
-		require.False(t, errors.Is(err, net.ErrWriteToConnected))
+		if expect, actual := true, errors.Is(err, net.ErrClosed); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
+		if expect, actual := false, errors.Is(err, net.ErrWriteToConnected); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
-		require.False(t, errors.Is(err, net.ErrClosed))
-		require.False(t, errors.Is(err, net.ErrWriteToConnected))
+		if expect, actual := false, errors.Is(err, net.ErrClosed); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
+		if expect, actual := false, errors.Is(err, net.ErrWriteToConnected); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
 	})
 }
 
@@ -205,21 +233,38 @@ func TestAs(t *testing.T) {
 		err := serrors.Wrap(&net.AddrError{Addr: "127.0.0.1"}, "error")
 
 		var cause1 *net.AddrError
-		require.True(t, errors.As(err, &cause1))
-		require.Equal(t, cause1.Addr, "127.0.0.1")
+		if expect, actual := true, errors.As(err, &cause1); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
+		if expect, actual := "127.0.0.1", cause1.Addr; expect != actual {
+			t.Fatalf(`expected %q, but was %q`, expect, actual)
+		}
 
 		var cause2 *net.OpError
-		require.False(t, errors.As(err, &cause2))
-		require.Nil(t, cause2)
+		if expect, actual := false, errors.As(err, &cause2); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
+		if cause2 != nil {
+			t.Fatal("expected not nil")
+		}
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
 		var cause1 *net.AddrError
-		require.False(t, errors.As(err, &cause1))
-		require.Nil(t, cause1)
+		if expect, actual := false, errors.As(err, &cause1); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
+		if cause1 != nil {
+			t.Fatal("expected nil")
+		}
 
 		var cause2 *net.OpError
-		require.False(t, errors.As(err, &cause2))
-		require.Nil(t, cause2)
+
+		if expect, actual := false, errors.As(err, &cause2); expect != actual {
+			t.Fatalf(`expected %v, but was %v`, expect, actual)
+		}
+		if cause2 != nil {
+			t.Fatal("expected nil")
+		}
 	})
 }

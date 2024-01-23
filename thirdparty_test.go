@@ -7,14 +7,15 @@ import (
 	"testing"
 
 	pkgerrors "github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Eun/serrors"
 )
 
 func TestGetStack_WithPkgErrors(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+	if expect, actual := true, ok; expect != actual {
+		t.Fatalf(`expected %v, but was %v`, expect, actual)
+	}
 
 	err := serrors.Wrap( //  [TestGetStack_WithPkgErrors00]
 		pkgerrors.Wrap( //  [TestGetStack_WithPkgErrors10]
@@ -47,7 +48,9 @@ func TestGetStack_WithPkgErrors(t *testing.T) {
 
 func TestError_Format_WithPkgErrors(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+	if expect, actual := true, ok; expect != actual {
+		t.Fatalf(`expected %v, but was %v`, expect, actual)
+	}
 
 	err := serrors.Wrap( //  [TestError_Format_WithPkgErrors01]
 		pkgerrors.Wrap( //  [TestError_Format_WithPkgErrors02]
@@ -60,7 +63,9 @@ func TestError_Format_WithPkgErrors(t *testing.T) {
 		generateExpectedStack(t, filename, "TestError_Format_WithPkgErrors01"),
 		generateExpectedStack(t, filename, "TestError_Format_WithPkgErrors02"),
 	)
-	require.Equal(t, expected, fmt.Sprintf("%+v", err))
+	if expect, actual := expected, fmt.Sprintf("%+v", err); expect != actual {
+		t.Fatalf(`expected %q, but was %q`, expect, actual)
+	}
 }
 
 func TestError_Error_WithPkgErrors(t *testing.T) {
@@ -71,6 +76,7 @@ func TestError_Error_WithPkgErrors(t *testing.T) {
 		"serrors",
 	)
 
-	expected := "serrors: pkgerrors: errors"
-	require.Equal(t, expected, err.Error())
+	if expect, actual := "serrors: pkgerrors: errors", err.Error(); expect != actual {
+		t.Fatalf(`expected %q, but was %q`, expect, actual)
+	}
 }

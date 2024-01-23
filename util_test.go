@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/Eun/serrors"
 )
@@ -36,9 +35,15 @@ func CompareErrorStack(t *testing.T, expected, actual []serrors.ErrorStack) {
 	}
 
 	expectedStack, err := encode(expected)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(`expected no error`)
+	}
 	actualStack, err := encode(actual)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(`expected no error`)
+	}
 
-	require.Equal(t, expectedStack, actualStack)
+	if expect, actual := expectedStack, actualStack; !reflect.DeepEqual(expect, actual) {
+		t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+	}
 }
