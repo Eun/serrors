@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"reflect"
 	"runtime"
 	"testing"
 
@@ -21,20 +20,14 @@ func testErrorFunc() error {
 
 func TestError(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	if expect, actual := true, ok; expect != actual {
-		t.Fatalf(`expected %v, but was %v`, expect, actual)
-	}
+	Equal(t, true, ok)
 
 	t.Run("Errorf", func(t *testing.T) {
 		err := serrors.Errorf("some error"). // [TestErrorErrorf00]
 							With("key1", "value1").
 							With("key2", "value2")
-		if err == nil {
-			t.Fatal(`expected not nil`)
-		}
-		if expect, actual := "some error", err.Error(); expect != actual {
-			t.Fatalf(`expected %q, but was %q`, expect, actual)
-		}
+		NotEqual(t, nil, err)
+		Equal(t, "some error", err.Error())
 
 		expectedFields := map[string]any{
 			"key1": "value1",
@@ -49,9 +42,7 @@ func TestError(t *testing.T) {
 				},
 			},
 		}
-		if expect, actual := expectedFields, serrors.GetFields(err); !reflect.DeepEqual(expect, actual) {
-			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
-		}
+		Equal(t, expectedFields, serrors.GetFields(err))
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 
@@ -61,12 +52,8 @@ func TestError(t *testing.T) {
 							With("deep.key2", "value2").
 							With("key1", "value1").
 							With("key2", "value2")
-		if err == nil {
-			t.Fatal(`expected not nil`)
-		}
-		if expect, actual := "some error: deep error", err.Error(); expect != actual {
-			t.Fatalf(`expected %q, but was %q`, expect, actual)
-		}
+		NotEqual(t, nil, err)
+		Equal(t, "some error: deep error", err.Error())
 
 		expectedFields := map[string]any{
 			"deep.key1": "value1",
@@ -98,9 +85,7 @@ func TestError(t *testing.T) {
 				},
 			},
 		}
-		if expect, actual := expectedFields, serrors.GetFields(err); !reflect.DeepEqual(expect, actual) {
-			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
-		}
+		Equal(t, expectedFields, serrors.GetFields(err))
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 }
@@ -141,9 +126,7 @@ func TestGetFields(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			if expect, actual := tc.expectedFields, serrors.GetFields(tc.error); !reflect.DeepEqual(expect, actual) {
-				t.Fatalf(`expected %+v, but was %+v`, expect, actual)
-			}
+			Equal(t, tc.expectedFields, serrors.GetFields(tc.error))
 		})
 	}
 }
@@ -184,9 +167,7 @@ func TestGetFieldsAsArguments(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			if expect, actual := tc.expectedArguments, serrors.GetFieldsAsCombinedSlice(tc.error); !reflect.DeepEqual(expect, actual) {
-				t.Fatalf(`expected %+v, but was %+v`, expect, actual)
-			}
+			Equal(t, tc.expectedArguments, serrors.GetFieldsAsCombinedSlice(tc.error))
 		})
 	}
 }
@@ -195,36 +176,24 @@ func TestUnwrap(t *testing.T) {
 	t.Run("wrapped error", func(t *testing.T) {
 		err1 := errors.New("error1")
 		err := serrors.Wrap(err1, "error2")
-		if expect, actual := err1, errors.Unwrap(err); !reflect.DeepEqual(expect, actual) {
-			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
-		}
+		Equal(t, err1, errors.Unwrap(err))
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error2")
-		if errors.Unwrap(err) != nil {
-			t.Fatal("expected not nil")
-		}
+		NotEqual(t, nil, errors.Unwrap(err))
 	})
 }
 
 func TestIs(t *testing.T) {
 	t.Run("wrapped error", func(t *testing.T) {
 		err := serrors.Wrap(net.ErrClosed, "error")
-		if expect, actual := true, errors.Is(err, net.ErrClosed); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
-		if expect, actual := false, errors.Is(err, net.ErrWriteToConnected); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
+		Equal(t, true, errors.Is(err, net.ErrClosed))
+		Equal(t, false, errors.Is(err, net.ErrWriteToConnected))
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
-		if expect, actual := false, errors.Is(err, net.ErrClosed); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
-		if expect, actual := false, errors.Is(err, net.ErrWriteToConnected); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
+		Equal(t, false, errors.Is(err, net.ErrClosed))
+		Equal(t, false, errors.Is(err, net.ErrWriteToConnected))
 	})
 }
 
@@ -233,17 +202,11 @@ func TestAs(t *testing.T) {
 		err := serrors.Wrap(&net.AddrError{Addr: "127.0.0.1"}, "error")
 
 		var cause1 *net.AddrError
-		if expect, actual := true, errors.As(err, &cause1); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
-		if expect, actual := "127.0.0.1", cause1.Addr; expect != actual {
-			t.Fatalf(`expected %q, but was %q`, expect, actual)
-		}
+		Equal(t, true, errors.As(err, &cause1))
+		Equal(t, "127.0.0.1", cause1.Addr)
 
 		var cause2 *net.OpError
-		if expect, actual := false, errors.As(err, &cause2); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
+		Equal(t, false, errors.As(err, &cause2))
 		if cause2 != nil {
 			t.Fatal("expected not nil")
 		}
@@ -251,20 +214,12 @@ func TestAs(t *testing.T) {
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
 		var cause1 *net.AddrError
-		if expect, actual := false, errors.As(err, &cause1); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
-		if cause1 != nil {
-			t.Fatal("expected nil")
-		}
+		Equal(t, false, errors.As(err, &cause1))
+		NotEqual(t, nil, cause1)
 
 		var cause2 *net.OpError
 
-		if expect, actual := false, errors.As(err, &cause2); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
-		if cause2 != nil {
-			t.Fatal("expected nil")
-		}
+		Equal(t, false, errors.As(err, &cause2))
+		NotEqual(t, nil, cause2)
 	})
 }

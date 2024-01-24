@@ -13,9 +13,7 @@ import (
 
 func TestGetStack_WithPkgErrors(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	if expect, actual := true, ok; expect != actual {
-		t.Fatalf(`expected %v, but was %v`, expect, actual)
-	}
+	Equal(t, true, ok)
 
 	err := serrors.Wrap( //  [TestGetStack_WithPkgErrors00]
 		pkgerrors.Wrap( //  [TestGetStack_WithPkgErrors10]
@@ -48,9 +46,7 @@ func TestGetStack_WithPkgErrors(t *testing.T) {
 
 func TestError_Format_WithPkgErrors(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	if expect, actual := true, ok; expect != actual {
-		t.Fatalf(`expected %v, but was %v`, expect, actual)
-	}
+	Equal(t, true, ok)
 
 	err := serrors.Wrap( //  [TestError_Format_WithPkgErrors01]
 		pkgerrors.Wrap( //  [TestError_Format_WithPkgErrors02]
@@ -63,9 +59,7 @@ func TestError_Format_WithPkgErrors(t *testing.T) {
 		generateExpectedStack(t, filename, "TestError_Format_WithPkgErrors01"),
 		generateExpectedStack(t, filename, "TestError_Format_WithPkgErrors02"),
 	)
-	if expect, actual := expected, fmt.Sprintf("%+v", err); expect != actual {
-		t.Fatalf(`expected %q, but was %q`, expect, actual)
-	}
+	Equal(t, expected, fmt.Sprintf("%+v", err))
 }
 
 func TestError_Error_WithPkgErrors(t *testing.T) {
@@ -76,7 +70,5 @@ func TestError_Error_WithPkgErrors(t *testing.T) {
 		"serrors",
 	)
 
-	if expect, actual := "serrors: pkgerrors: errors", err.Error(); expect != actual {
-		t.Fatalf(`expected %q, but was %q`, expect, actual)
-	}
+	Equal(t, "serrors: pkgerrors: errors", err.Error())
 }

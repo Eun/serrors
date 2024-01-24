@@ -4,7 +4,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -16,23 +15,15 @@ func TestGetStack(t *testing.T) {
 	// just generic testing
 	// the real test are happening in TestError & TestBuilder.
 	t.Run("get stack from nil value", func(t *testing.T) {
-		if serrors.GetStack(nil) != nil {
-			t.Fatal("expected nil")
-		}
+		Equal(t, nil, serrors.GetStack(nil))
 	})
 	t.Run("get original error from stack", func(t *testing.T) {
 		err := serrors.New("some error")
 
 		stack := serrors.GetStack(err)
-		if expect, actual := 1, len(stack); expect != actual {
-			t.Fatalf(`expected %v, but was %v`, expect, actual)
-		}
-		if expect, actual := err, stack[0].Error(); !reflect.DeepEqual(expect, actual) {
-			t.Fatalf(`expected %+v, but was %+v`, expect, actual)
-		}
-		if expect, actual := err.Error(), stack[0].ErrorMessage; expect != actual {
-			t.Fatalf(`expected %q, but was %q`, expect, actual)
-		}
+		Equal(t, 1, len(stack))
+		Equal(t, err, stack[0].Error())
+		Equal(t, err.Error(), stack[0].ErrorMessage)
 	})
 }
 
@@ -43,9 +34,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Parse the Go file
 	file, err := parser.ParseFile(fileSet, fileName, nil, parser.AllErrors|parser.ParseComments)
-	if err != nil {
-		t.Fatal(`expected no error`)
-	}
+	NotEqual(t, nil, err)
 	packageName := "github.com/Eun/" + file.Name.Name
 
 	var inspectNode func(n ast.Node) bool
@@ -65,9 +54,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 				// Get the function name and line number
 				pos := fileSet.Position(v.Slash)
 				funcName := findEnclosingFunc(fileSet, file, pos.Offset)
-				if result != nil {
-					t.Fatalf(`found a marker %q already`, marker)
-				}
+				NotEqual(t, nil, result)
 				result = &serrors.StackFrame{
 					File: fileName,
 					Func: packageName + "." + funcName,
@@ -81,9 +68,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Traverse the AST
 	ast.Inspect(file, inspectNode)
-	if result == nil {
-		t.Fatalf(`no marker found %q`, marker)
-	}
+	NotEqual(t, nil, result)
 	return *result
 }
 

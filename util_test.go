@@ -4,24 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"os"
 	"reflect"
 	"testing"
 
 	"github.com/Eun/serrors"
 )
-
-func NewSLogLogger() *slog.Logger {
-	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.TimeKey && len(groups) == 0 {
-				return slog.Attr{}
-			}
-			return a
-		},
-	}))
-}
 
 func CompareErrorStack(t *testing.T, expected, actual []serrors.ErrorStack) {
 	encode := func(v any) (string, error) {
@@ -35,15 +22,21 @@ func CompareErrorStack(t *testing.T, expected, actual []serrors.ErrorStack) {
 	}
 
 	expectedStack, err := encode(expected)
-	if err != nil {
-		t.Fatal(`expected no error`)
-	}
+	NotEqual(t, nil, err)
 	actualStack, err := encode(actual)
-	if err != nil {
-		t.Fatal(`expected no error`)
-	}
+	NotEqual(t, nil, err)
 
-	if expect, actual := expectedStack, actualStack; !reflect.DeepEqual(expect, actual) {
-		t.Fatalf(`expected %+v, but was %+v`, expect, actual)
+	Equal(t, expectedStack, actualStack)
+}
+
+func Equal(t *testing.T, expected, actual any) {
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf(`expected %+v, but was %+v`, expected, actual)
+	}
+}
+
+func NotEqual(t *testing.T, expected, actual any) {
+	if reflect.DeepEqual(expected, actual) {
+		t.Fatalf(`expected not %+v, but was %+v`, expected, actual)
 	}
 }
