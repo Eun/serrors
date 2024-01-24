@@ -180,7 +180,7 @@ func TestUnwrap(t *testing.T) {
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error2")
-		NotEqual(t, nil, errors.Unwrap(err))
+		Equal(t, nil, errors.Unwrap(err))
 	})
 }
 
@@ -207,16 +207,16 @@ func TestAs(t *testing.T) {
 
 		var cause2 *net.OpError
 		Equal(t, false, errors.As(err, &cause2))
-		NotEqual(t, nil, cause2)
+		Equal(t, nil, cause2)
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
 		var cause1 *net.AddrError
 		Equal(t, false, errors.As(err, &cause1))
-		NotEqual(t, nil, cause1)
+		Equal(t, nil, cause1)
 
 		var cause2 *net.OpError
 		Equal(t, false, errors.As(err, &cause2))
-		NotEqual(t, nil, cause2)
+		Equal(t, nil, cause2)
 	})
 }

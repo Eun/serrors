@@ -54,7 +54,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 				// Get the function name and line number
 				pos := fileSet.Position(v.Slash)
 				funcName := findEnclosingFunc(fileSet, file, pos.Offset)
-				NotEqual(t, nil, result)
+				Equal(t, nil, result)
 				result = &serrors.StackFrame{
 					File: fileName,
 					Func: packageName + "." + funcName,
