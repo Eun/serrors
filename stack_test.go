@@ -34,7 +34,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Parse the Go file
 	file, err := parser.ParseFile(fileSet, fileName, nil, parser.AllErrors|parser.ParseComments)
-	NotEqual(t, nil, err)
+	Equal(t, nil, err)
 	packageName := "github.com/Eun/" + file.Name.Name
 
 	var inspectNode func(n ast.Node) bool

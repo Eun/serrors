@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 	"testing"
 
 	"github.com/Eun/serrors"
@@ -22,21 +23,21 @@ func CompareErrorStack(t *testing.T, expected, actual []serrors.ErrorStack) {
 	}
 
 	expectedStack, err := encode(expected)
-	NotEqual(t, nil, err)
+	Equal(t, nil, err)
 	actualStack, err := encode(actual)
-	NotEqual(t, nil, err)
+	Equal(t, nil, err)
 
 	Equal(t, expectedStack, actualStack)
 }
 
 func Equal(t *testing.T, expected, actual any) {
 	if !reflect.DeepEqual(expected, actual) {
-		t.Fatalf(`expected %+v, but was %+v`, expected, actual)
+		t.Fatalf("expected %+v, but was %+v\n%s", expected, actual, string(debug.Stack()))
 	}
 }
 
 func NotEqual(t *testing.T, expected, actual any) {
 	if reflect.DeepEqual(expected, actual) {
-		t.Fatalf(`expected not %+v, but was %+v`, expected, actual)
+		t.Fatalf("expected not %+v, but was %+v\n%s", expected, actual, string(debug.Stack()))
 	}
 }
