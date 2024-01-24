@@ -207,9 +207,7 @@ func TestAs(t *testing.T) {
 
 		var cause2 *net.OpError
 		Equal(t, false, errors.As(err, &cause2))
-		if cause2 != nil {
-			t.Fatal("expected not nil")
-		}
+		NotEqual(t, nil, cause2)
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
@@ -218,7 +216,6 @@ func TestAs(t *testing.T) {
 		NotEqual(t, nil, cause1)
 
 		var cause2 *net.OpError
-
 		Equal(t, false, errors.As(err, &cause2))
 		NotEqual(t, nil, cause2)
 	})
