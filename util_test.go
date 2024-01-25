@@ -4,25 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"os"
+	"reflect"
+	"runtime/debug"
+	"slices"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/Eun/serrors"
 )
-
-func NewSLogLogger() *slog.Logger {
-	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.TimeKey && len(groups) == 0 {
-				return slog.Attr{}
-			}
-			return a
-		},
-	}))
-}
 
 func CompareErrorStack(t *testing.T, expected, actual []serrors.ErrorStack) {
 	encode := func(v any) (string, error) {
@@ -36,9 +24,58 @@ func CompareErrorStack(t *testing.T, expected, actual []serrors.ErrorStack) {
 	}
 
 	expectedStack, err := encode(expected)
-	require.NoError(t, err)
+	Nil(t, err)
 	actualStack, err := encode(actual)
-	require.NoError(t, err)
+	Nil(t, err)
 
-	require.Equal(t, expectedStack, actualStack)
+	Equal(t, expectedStack, actualStack)
+}
+
+func Equal(t *testing.T, expected, actual any) {
+	if expected == nil && actual == nil {
+		return
+	}
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("expected %+v, but was %+v\n%s", expected, actual, string(debug.Stack()))
+	}
+}
+
+func NotEqual(t *testing.T, expected, actual any) {
+	if expected == nil && actual == nil {
+		t.Fatalf("expected not %+v, but was %+v\n%s", expected, actual, string(debug.Stack()))
+	}
+	if reflect.DeepEqual(expected, actual) {
+		t.Fatalf("expected not %+v, but was %+v\n%s", expected, actual, string(debug.Stack()))
+	}
+}
+
+func isNil(actual any) bool {
+	if actual == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(actual)
+	kind := value.Kind()
+	isNilableKind := slices.Contains(
+		[]reflect.Kind{
+			reflect.Chan, reflect.Func,
+			reflect.Interface, reflect.Map,
+			reflect.Ptr, reflect.Slice, reflect.UnsafePointer},
+		kind)
+	if isNilableKind && value.IsNil() {
+		return true
+	}
+	return false
+}
+
+func Nil(t *testing.T, actual any) {
+	if !isNil(actual) {
+		t.Fatalf("expected %+v to be nil\n%s", actual, string(debug.Stack()))
+	}
+}
+
+func NotNil(t *testing.T, actual any) {
+	if isNil(actual) {
+		t.Fatalf("expected %+v to be not nil\n%s", actual, string(debug.Stack()))
+	}
 }

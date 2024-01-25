@@ -7,8 +7,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/Eun/serrors"
 )
 
@@ -22,15 +20,14 @@ func testErrorFunc() error {
 
 func TestError(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+	Equal(t, true, ok)
 
 	t.Run("Errorf", func(t *testing.T) {
 		err := serrors.Errorf("some error"). // [TestErrorErrorf00]
 							With("key1", "value1").
 							With("key2", "value2")
-
-		require.NotNil(t, err)
-		require.Equal(t, "some error", err.Error())
+		NotNil(t, err)
+		Equal(t, "some error", err.Error())
 
 		expectedFields := map[string]any{
 			"key1": "value1",
@@ -45,7 +42,7 @@ func TestError(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		Equal(t, expectedFields, serrors.GetFields(err))
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 
@@ -55,8 +52,8 @@ func TestError(t *testing.T) {
 							With("deep.key2", "value2").
 							With("key1", "value1").
 							With("key2", "value2")
-		require.NotNil(t, err)
-		require.Equal(t, "some error: deep error", err.Error())
+		NotNil(t, err)
+		Equal(t, "some error: deep error", err.Error())
 
 		expectedFields := map[string]any{
 			"deep.key1": "value1",
@@ -88,7 +85,7 @@ func TestError(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		Equal(t, expectedFields, serrors.GetFields(err))
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 }
@@ -129,7 +126,7 @@ func TestGetFields(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expectedFields, serrors.GetFields(tc.error))
+			Equal(t, tc.expectedFields, serrors.GetFields(tc.error))
 		})
 	}
 }
@@ -170,7 +167,7 @@ func TestGetFieldsAsArguments(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expectedArguments, serrors.GetFieldsAsCombinedSlice(tc.error))
+			Equal(t, tc.expectedArguments, serrors.GetFieldsAsCombinedSlice(tc.error))
 		})
 	}
 }
@@ -179,24 +176,24 @@ func TestUnwrap(t *testing.T) {
 	t.Run("wrapped error", func(t *testing.T) {
 		err1 := errors.New("error1")
 		err := serrors.Wrap(err1, "error2")
-		require.Equal(t, err1, errors.Unwrap(err))
+		Equal(t, err1, errors.Unwrap(err))
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error2")
-		require.Nil(t, errors.Unwrap(err))
+		Nil(t, errors.Unwrap(err))
 	})
 }
 
 func TestIs(t *testing.T) {
 	t.Run("wrapped error", func(t *testing.T) {
 		err := serrors.Wrap(net.ErrClosed, "error")
-		require.True(t, errors.Is(err, net.ErrClosed))
-		require.False(t, errors.Is(err, net.ErrWriteToConnected))
+		Equal(t, true, errors.Is(err, net.ErrClosed))
+		Equal(t, false, errors.Is(err, net.ErrWriteToConnected))
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
-		require.False(t, errors.Is(err, net.ErrClosed))
-		require.False(t, errors.Is(err, net.ErrWriteToConnected))
+		Equal(t, false, errors.Is(err, net.ErrClosed))
+		Equal(t, false, errors.Is(err, net.ErrWriteToConnected))
 	})
 }
 
@@ -205,21 +202,21 @@ func TestAs(t *testing.T) {
 		err := serrors.Wrap(&net.AddrError{Addr: "127.0.0.1"}, "error")
 
 		var cause1 *net.AddrError
-		require.True(t, errors.As(err, &cause1))
-		require.Equal(t, cause1.Addr, "127.0.0.1")
+		Equal(t, true, errors.As(err, &cause1))
+		Equal(t, "127.0.0.1", cause1.Addr)
 
 		var cause2 *net.OpError
-		require.False(t, errors.As(err, &cause2))
-		require.Nil(t, cause2)
+		Equal(t, false, errors.As(err, &cause2))
+		Nil(t, cause2)
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
 		var cause1 *net.AddrError
-		require.False(t, errors.As(err, &cause1))
-		require.Nil(t, cause1)
+		Equal(t, false, errors.As(err, &cause1))
+		Nil(t, cause1)
 
 		var cause2 *net.OpError
-		require.False(t, errors.As(err, &cause2))
-		require.Nil(t, cause2)
+		Equal(t, false, errors.As(err, &cause2))
+		Nil(t, cause2)
 	})
 }

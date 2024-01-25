@@ -8,8 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/Eun/serrors"
 )
 
@@ -17,15 +15,15 @@ func TestGetStack(t *testing.T) {
 	// just generic testing
 	// the real test are happening in TestError & TestBuilder.
 	t.Run("get stack from nil value", func(t *testing.T) {
-		require.Nil(t, serrors.GetStack(nil))
+		Nil(t, serrors.GetStack(nil))
 	})
 	t.Run("get original error from stack", func(t *testing.T) {
 		err := serrors.New("some error")
 
 		stack := serrors.GetStack(err)
-		require.Len(t, stack, 1)
-		require.Equal(t, err, stack[0].Error())
-		require.Equal(t, err.Error(), stack[0].ErrorMessage)
+		Equal(t, 1, len(stack))
+		Equal(t, err, stack[0].Error())
+		Equal(t, err.Error(), stack[0].ErrorMessage)
 	})
 }
 
@@ -36,7 +34,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Parse the Go file
 	file, err := parser.ParseFile(fileSet, fileName, nil, parser.AllErrors|parser.ParseComments)
-	require.NoError(t, err)
+	Nil(t, err)
 	packageName := "github.com/Eun/" + file.Name.Name
 
 	var inspectNode func(n ast.Node) bool
@@ -56,7 +54,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 				// Get the function name and line number
 				pos := fileSet.Position(v.Slash)
 				funcName := findEnclosingFunc(fileSet, file, pos.Offset)
-				require.Nil(t, result, "found a marker %q already", marker)
+				Nil(t, result)
 				result = &serrors.StackFrame{
 					File: fileName,
 					Func: packageName + "." + funcName,
@@ -70,7 +68,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Traverse the AST
 	ast.Inspect(file, inspectNode)
-	require.NotNil(t, result, "no marker found %s", marker)
+	NotNil(t, result)
 	return *result
 }
 

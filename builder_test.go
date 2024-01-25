@@ -4,8 +4,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/Eun/serrors"
 )
 
@@ -17,7 +15,7 @@ func testBuilderErrorFunc() error {
 
 func TestBuilder(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+	Equal(t, true, ok)
 
 	t.Run("Errorf", func(t *testing.T) {
 		errorBuilder := serrors.NewBuilder().
@@ -26,8 +24,8 @@ func TestBuilder(t *testing.T) {
 		err := errorBuilder.Errorf("some error"). // [TestBuilderErrorf00]
 								With("key2", "value2").
 								With("key3", "value3")
-		require.NotNil(t, err)
-		require.Equal(t, "some error", err.Error())
+		NotNil(t, err)
+		Equal(t, "some error", err.Error())
 
 		expectedFields := map[string]any{
 			"key1": "value1",
@@ -43,7 +41,7 @@ func TestBuilder(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		Equal(t, expectedFields, serrors.GetFields(err))
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 
@@ -57,8 +55,8 @@ func TestBuilder(t *testing.T) {
 								With("deep.key2", "value2").
 								With("key2", "value2").
 								With("key3", "value3")
-		require.NotNil(t, err)
-		require.Equal(t, "some error: deep error", err.Error())
+		NotNil(t, err)
+		Equal(t, "some error: deep error", err.Error())
 
 		expectedFields := map[string]any{
 			"deep.key1": "value1",
@@ -92,7 +90,7 @@ func TestBuilder(t *testing.T) {
 				},
 			},
 		}
-		require.Equal(t, expectedFields, serrors.GetFields(err))
+		Equal(t, expectedFields, serrors.GetFields(err))
 		CompareErrorStack(t, expectedStack, serrors.GetStack(err))
 	})
 }

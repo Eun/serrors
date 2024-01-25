@@ -61,9 +61,8 @@ func addUserToRole(userName, roleName string) error {
 }
 
 func ExampleError() {
-	logger := NewSLogLogger()
 	if err := addUserToRole("joe", "guest"); err != nil {
-		logger.Error("name validation failed",
+		slog.Error("name validation failed",
 			"error", err.Error(),
 			slog.Group("details", serrors.GetFieldsAsCombinedSlice(err)...),
 			"stack", serrors.GetStack(err),

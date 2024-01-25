@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/Eun/serrors"
 )
 
@@ -53,33 +51,33 @@ func TestError_Error(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expectedErrorText, tc.error.Error())
+			Equal(t, tc.expectedErrorText, tc.error.Error())
 		})
 	}
 }
 
 func TestError_Format(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+	Equal(t, true, ok)
 
 	cause := serrors.New("error 1").With("k1", "v1")       // [TestError_Format01]
 	err := serrors.Wrap(cause, "error 2").With("k2", "v2") // [TestError_Format00]
 
 	t.Run("normal string", func(t *testing.T) {
-		require.Equal(t, "error 2: error 1", fmt.Sprintf("%s", err))
+		Equal(t, "error 2: error 1", fmt.Sprintf("%s", err))
 	})
 	t.Run("quoted string", func(t *testing.T) {
-		require.Equal(t, `"error 2: error 1"`, fmt.Sprintf("%q", err))
+		Equal(t, `"error 2: error 1"`, fmt.Sprintf("%q", err))
 	})
 	t.Run("verbose", func(t *testing.T) {
-		require.Equal(t, "error 2: error 1[k1=v1 k2=v2]", fmt.Sprintf("%v", err))
+		Equal(t, "error 2: error 1[k1=v1 k2=v2]", fmt.Sprintf("%v", err))
 	})
 	t.Run("extra verbose", func(t *testing.T) {
 		expected := fmt.Sprintf("error 2\n[k2=v2]\n%s\nerror 1\n[k1=v1]\n%s\n",
 			generateExpectedStack(t, filename, "TestError_Format00"),
 			generateExpectedStack(t, filename, "TestError_Format01"),
 		)
-		require.Equal(t, expected, fmt.Sprintf("%+v", err))
+		Equal(t, expected, fmt.Sprintf("%+v", err))
 	})
 }
 
