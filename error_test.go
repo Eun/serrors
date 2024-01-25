@@ -26,7 +26,7 @@ func TestError(t *testing.T) {
 		err := serrors.Errorf("some error"). // [TestErrorErrorf00]
 							With("key1", "value1").
 							With("key2", "value2")
-		NotEqual(t, nil, err)
+		NotNil(t, err)
 		Equal(t, "some error", err.Error())
 
 		expectedFields := map[string]any{
@@ -52,7 +52,7 @@ func TestError(t *testing.T) {
 							With("deep.key2", "value2").
 							With("key1", "value1").
 							With("key2", "value2")
-		NotEqual(t, nil, err)
+		NotNil(t, err)
 		Equal(t, "some error: deep error", err.Error())
 
 		expectedFields := map[string]any{
@@ -180,7 +180,7 @@ func TestUnwrap(t *testing.T) {
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error2")
-		Equal(t, nil, errors.Unwrap(err))
+		Nil(t, errors.Unwrap(err))
 	})
 }
 
@@ -207,16 +207,16 @@ func TestAs(t *testing.T) {
 
 		var cause2 *net.OpError
 		Equal(t, false, errors.As(err, &cause2))
-		Equal(t, nil, cause2)
+		Nil(t, cause2)
 	})
 	t.Run("wrapped no error", func(t *testing.T) {
 		err := serrors.Wrap(nil, "error")
 		var cause1 *net.AddrError
 		Equal(t, false, errors.As(err, &cause1))
-		Equal(t, nil, cause1)
+		Nil(t, cause1)
 
 		var cause2 *net.OpError
 		Equal(t, false, errors.As(err, &cause2))
-		Equal(t, nil, cause2)
+		Nil(t, cause2)
 	})
 }

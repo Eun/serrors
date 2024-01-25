@@ -24,7 +24,7 @@ func TestBuilder(t *testing.T) {
 		err := errorBuilder.Errorf("some error"). // [TestBuilderErrorf00]
 								With("key2", "value2").
 								With("key3", "value3")
-		NotEqual(t, nil, err)
+		NotNil(t, err)
 		Equal(t, "some error", err.Error())
 
 		expectedFields := map[string]any{
@@ -55,7 +55,7 @@ func TestBuilder(t *testing.T) {
 								With("deep.key2", "value2").
 								With("key2", "value2").
 								With("key3", "value3")
-		NotEqual(t, nil, err)
+		NotNil(t, err)
 		Equal(t, "some error: deep error", err.Error())
 
 		expectedFields := map[string]any{

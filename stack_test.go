@@ -15,7 +15,7 @@ func TestGetStack(t *testing.T) {
 	// just generic testing
 	// the real test are happening in TestError & TestBuilder.
 	t.Run("get stack from nil value", func(t *testing.T) {
-		Equal(t, nil, serrors.GetStack(nil))
+		Nil(t, serrors.GetStack(nil))
 	})
 	t.Run("get original error from stack", func(t *testing.T) {
 		err := serrors.New("some error")
@@ -34,7 +34,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Parse the Go file
 	file, err := parser.ParseFile(fileSet, fileName, nil, parser.AllErrors|parser.ParseComments)
-	Equal(t, nil, err)
+	Nil(t, err)
 	packageName := "github.com/Eun/" + file.Name.Name
 
 	var inspectNode func(n ast.Node) bool
@@ -54,7 +54,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 				// Get the function name and line number
 				pos := fileSet.Position(v.Slash)
 				funcName := findEnclosingFunc(fileSet, file, pos.Offset)
-				Equal(t, nil, result)
+				Nil(t, result)
 				result = &serrors.StackFrame{
 					File: fileName,
 					Func: packageName + "." + funcName,
@@ -68,7 +68,7 @@ func buildStackFrameFromMarker(t *testing.T, fileName, marker string) serrors.St
 
 	// Traverse the AST
 	ast.Inspect(file, inspectNode)
-	NotEqual(t, nil, result)
+	NotNil(t, result)
 	return *result
 }
 
